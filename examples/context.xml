@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Example: $CATALINA_BASE/conf/Catalina/localhost/<app>.xml
+  or $CATALINA_BASE/conf/context.xml.
+  Copy servlet-context-overrides-*.jar to $CATALINA_BASE/lib first.
+-->
+<Context>
+    <Listener className="io.github.connellite.overrides.ServletContextOverridesListener"
+              sessionTimeout="60"
+              requestCharacterEncoding="UTF-8"
+              responseCharacterEncoding="UTF-8"/>
+</Context>

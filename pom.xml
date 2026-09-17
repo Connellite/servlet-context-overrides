@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.connellite</groupId>
+    <artifactId>servlet-context-overrides</artifactId>
+    <version>1.0-beta-1</version>
+    <packaging>jar</packaging>
+
+    <name>servlet-context-overrides</name>
+    <description>Tomcat LifecycleListener that overrides selected ServletContext settings from context.xml</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <manifold.version>2026.1.6</manifold.version>
+        <manifold.servlet.symbol>JAVAX</manifold.servlet.symbol>
+        <jar.finalName>${project.artifactId}-${project.version}</jar.finalName>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <lombok.version>1.18.42</lombok.version>
+        <junit.version>5.13.1</junit.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <delimiters>
+                        <delimiter>@</delimiter>
+                    </delimiters>
+                    <useDefaultDelimiters>false</useDefaultDelimiters>
+                </configuration>
+                <executions>
+                    <!--
+                      Manifold IDEA plugin ignores -A… compiler args; it only reads build.properties
+                      in the source-file directory ancestry. Filter the active profile symbol here
+                      so IDE and javac share one definition.
+                    -->
+                    <execution>
+                        <id>filter-manifold-build-properties</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/build-config</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>build.properties</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <release>17</release>
+                    <compilerArgs>
+                        <arg>-Xplugin:Manifold</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>systems.manifold</groupId>
+                            <artifactId>manifold-preprocessor</artifactId>
+                            <version>${manifold.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <finalName>${jar.finalName}</finalName>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>javax</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <manifold.servlet.symbol>JAVAX</manifold.servlet.symbol>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                    <version>4.0.1</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-catalina</artifactId>
+                    <version>9.0.98</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>jakarta</id>
+            <properties>
+                <manifold.servlet.symbol>JAKARTA</manifold.servlet.symbol>
+                <jar.finalName>${project.artifactId}-${project.version}-jakarta</jar.finalName>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.servlet</groupId>
+                    <artifactId>jakarta.servlet-api</artifactId>
+                    <version>6.0.0</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-catalina</artifactId>
+                    <version>10.1.34</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+</project>
