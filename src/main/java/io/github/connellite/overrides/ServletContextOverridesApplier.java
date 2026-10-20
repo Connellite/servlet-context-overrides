@@ -25,9 +25,9 @@ import java.util.Set;
 final class ServletContextOverridesApplier {
 
     enum Phase {
-        /** CONFIGURE_START: encodings, cookie config, tracking modes, session timeout. */
+        /** CONFIGURE_START: encodings, cookie config, tracking modes, Context setters. */
         EARLY,
-        /** AFTER_START: session timeout via Tomcat Context API only (wins over web.xml). */
+        /** AFTER_START: Context setters only (wins over web.xml). */
         LATE
     }
 
@@ -39,10 +39,7 @@ final class ServletContextOverridesApplier {
             return;
         }
 
-        if (config.sessionTimeout() != null) {
-            context.setSessionTimeout(config.sessionTimeout());
-            log.info(() -> "sessionTimeout=" + config.sessionTimeout() + " (" + phase + ") context=" + context.getPath());
-        }
+        applyContext(context, config, phase);
 
         if (phase == Phase.LATE) {
             return;
@@ -58,7 +55,32 @@ final class ServletContextOverridesApplier {
     }
 
     /**
-     * Applies ServletContext-scoped overrides only (no Tomcat {@link Context#setSessionTimeout}).
+     * Applies Tomcat {@link Context} setters. Called in both EARLY and LATE so values
+     * win over {@code web.xml} regardless of listener order vs {@code ContextConfig}.
+     */
+    private static void applyContext(Context context, OverrideConfig config, Phase phase) {
+        String path = context.getPath();
+        if (config.sessionTimeout() != null) {
+            context.setSessionTimeout(config.sessionTimeout());
+            log.info("sessionTimeout=" + config.sessionTimeout() + " (" + phase + ") context=" + path);
+        }
+        if (config.denyUncoveredHttpMethods() != null) {
+            context.setDenyUncoveredHttpMethods(config.denyUncoveredHttpMethods());
+            log.info("denyUncoveredHttpMethods=" + config.denyUncoveredHttpMethods() + " (" + phase + ") context=" + path);
+        }
+        if (notBlank(config.displayName())) {
+            String displayName = config.displayName().trim();
+            context.setDisplayName(displayName);
+            log.info("displayName=" + displayName + " (" + phase + ") context=" + path);
+        }
+        if (config.cookies() != null) {
+            context.setCookies(config.cookies());
+            log.info("cookies=" + config.cookies() + " (" + phase + ") context=" + path);
+        }
+    }
+
+    /**
+     * Applies ServletContext-scoped overrides only (no Tomcat {@link Context} setters).
      */
     static void applyServletContext(ServletContext servletContext, OverrideConfig config) {
         if (config == null || servletContext == null) {
@@ -67,11 +89,11 @@ final class ServletContextOverridesApplier {
 
         if (notBlank(config.requestCharacterEncoding())) {
             servletContext.setRequestCharacterEncoding(config.requestCharacterEncoding().trim());
-            log.info(() -> "requestCharacterEncoding=" + config.requestCharacterEncoding().trim());
+            log.info("requestCharacterEncoding=" + config.requestCharacterEncoding().trim());
         }
         if (notBlank(config.responseCharacterEncoding())) {
             servletContext.setResponseCharacterEncoding(config.responseCharacterEncoding().trim());
-            log.info(() -> "responseCharacterEncoding=" + config.responseCharacterEncoding().trim());
+            log.info("responseCharacterEncoding=" + config.responseCharacterEncoding().trim());
         }
 
         applySessionCookieConfig(servletContext, config);
@@ -117,7 +139,7 @@ final class ServletContextOverridesApplier {
             return;
         }
         servletContext.setSessionTrackingModes(modes);
-        log.info(() -> "sessionTrackingModes=" + modes);
+        log.info("sessionTrackingModes=" + modes);
     }
 
     private static boolean notBlank(String value) {

@@ -12,7 +12,7 @@ import java.util.logging.Level;
 
 /**
  * Tomcat {@link LifecycleListener} that overrides selected {@code ServletContext}
- * / session settings from attributes on the {@code <Listener>} element in
+ * / {@link Context} settings from attributes on the {@code <Listener>} element in
  * {@code context.xml}.
  *
  * <p>Any attribute that is omitted is left unchanged (the corresponding WAR
@@ -51,6 +51,10 @@ public class ServletContextOverridesListener implements LifecycleListener {
      */
     private String sessionTrackingModes;
 
+    private Boolean denyUncoveredHttpMethods;
+    private String displayName;
+    private Boolean cookies;
+
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
         Object lifecycle = event.getLifecycle();
@@ -61,7 +65,7 @@ public class ServletContextOverridesListener implements LifecycleListener {
         String type = event.getType();
         if (Lifecycle.CONFIGURE_START_EVENT.equals(type)) {
             // Prefer applying encodings / cookie config before the context becomes available.
-            // Session timeout is also applied here; AFTER_START re-applies it so we win over web.xml
+            // Context setters are also applied here; AFTER_START re-applies them so we win over web.xml
             // regardless of LifecycleListener ordering vs ContextConfig.
             apply(context, ServletContextOverridesApplier.Phase.EARLY);
             return;
@@ -92,7 +96,10 @@ public class ServletContextOverridesListener implements LifecycleListener {
                 sessionCookieMaxAge,
                 sessionCookieHttpOnly,
                 sessionCookieSecure,
-                sessionTrackingModes
+                sessionTrackingModes,
+                denyUncoveredHttpMethods,
+                displayName,
+                cookies
         );
     }
 }

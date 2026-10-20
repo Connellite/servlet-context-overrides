@@ -13,7 +13,10 @@ record OverrideConfig(
         Integer sessionCookieMaxAge,
         Boolean sessionCookieHttpOnly,
         Boolean sessionCookieSecure,
-        String sessionTrackingModes
+        String sessionTrackingModes,
+        Boolean denyUncoveredHttpMethods,
+        String displayName,
+        Boolean cookies
 ) {
     boolean isEmpty() {
         return sessionTimeout == null
@@ -25,7 +28,10 @@ record OverrideConfig(
                 && sessionCookieMaxAge == null
                 && sessionCookieHttpOnly == null
                 && sessionCookieSecure == null
-                && isBlank(sessionTrackingModes);
+                && isBlank(sessionTrackingModes)
+                && denyUncoveredHttpMethods == null
+                && isBlank(displayName)
+                && cookies == null;
     }
 
     private static boolean isBlank(String value) {

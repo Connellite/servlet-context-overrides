@@ -39,11 +39,14 @@ Only list the options you want to force. Everything else is untouched.
 | `sessionCookieHttpOnly` | boolean | Session cookie HttpOnly flag |
 | `sessionCookieSecure` | boolean | Session cookie Secure flag |
 | `sessionTrackingModes` | string | Comma/space-separated: `COOKIE`, `URL`, `SSL` |
+| `denyUncoveredHttpMethods` | boolean | Reject HTTP methods not covered by a security constraint |
+| `displayName` | string | Web application display name |
+| `cookies` | boolean | Use cookies for the session id (`Context.setCookies`) |
 
 ## Behaviour
 
-- **CONFIGURE_START** — applies encodings, session cookie settings, tracking modes, and session timeout.
-- **AFTER_START** — reapplies `sessionTimeout` via Tomcat `Context.setSessionTimeout`, so it wins over `web.xml` even if listener order vs `ContextConfig` varies.
+- **CONFIGURE_START** — applies encodings, session cookie settings, tracking modes, and Context setters (`sessionTimeout`, `denyUncoveredHttpMethods`, `displayName`, `cookies`).
+- **AFTER_START** — reapplies those Context setters so they win over `web.xml` even if listener order vs `ContextConfig` varies.
 
 Blank strings are treated as unset.
 
@@ -66,8 +69,8 @@ mvn clean package -Pjakarta
 
 Artifacts:
 
-- `servlet-context-overrides-1.0-beta-1.jar` — javax / Tomcat 9
-- `servlet-context-overrides-1.0-beta-1-jakarta.jar` — jakarta / Tomcat 10.1+
+- `servlet-context-overrides-1.0-beta-2.jar` — javax / Tomcat 9
+- `servlet-context-overrides-1.0-beta-2-jakarta.jar` — jakarta / Tomcat 10.1+
 
 Servlet imports are selected at compile time with the
 [Manifold preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
